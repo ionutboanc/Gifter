@@ -12,10 +12,7 @@ Gift::Gift(std::string name, std::string gender, std::unordered_set<std::string>
 		add_age(age);
 }
 
-bool Gift::operator<(const Gift& gift) const
-{
-	return gift.get_match_score() < get_match_score();
-}
+
 
 void Gift::increase_match_score()
 {

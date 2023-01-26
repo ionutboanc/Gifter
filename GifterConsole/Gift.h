@@ -8,7 +8,7 @@ class Gift
 public:
 	Gift();
 	Gift(std::string name, std::string gender, std::unordered_set <std::string> ages);
-	bool operator<(const Gift& gift) const;
+	
 	void increase_match_score();
 	void set_match_score(int match_score);
 	int get_match_score() const;
