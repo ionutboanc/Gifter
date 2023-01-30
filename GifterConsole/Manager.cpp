@@ -17,8 +17,54 @@ Manager::Manager()
 
 	handle_user();
 }
+bool Manager::check_if_user_exists(std::string &user_name)
+{
+	struct stat sb;
+	std::string adress = "./" + user_name;
+	if (stat(adress.c_str(), &sb) == 0)
+	{
+		return true;
+	}
+	return false;
+}
+void Manager::sign_up()
+{
+	std::string adress = "./" + m_user.m_user_name;
+	_mkdir(adress.c_str());
+	std::cout << "Oh so you're new here! Enter a secret password that you'll remember: ";
+	std::cin >> m_password;
+	std::ofstream passwordFile(m_user.m_user_name + "/" + m_password + ".txt");
+	passwordFile.close();
+	m_user.m_index_current_person = 0;
+	create_new_person();
 
-void Manager::menu_wrong_password(std::string user_name)
+}
+void Manager::log_in()
+{
+	std::cout << "Welcome back! Enter your password: ";
+	std::cin >> m_password;
+	std::ifstream ifs("./" + m_user.m_user_name + "/" + m_password + ".txt");
+	if (ifs.good())
+	{
+		std::cout << "Logged in." << std::endl;
+		std::string person_name;
+		while (std::getline(ifs, person_name)) {
+			Person person;
+			std::ifstream personStream("./" + m_user.m_user_name + "/" + person_name + ".txt");
+			personStream >> person;
+			m_user.m_persons.push_back(person);
+		}
+
+		run();
+	}
+	else
+	{
+		std::cout << "Wrong password!" << std::endl;
+		menu_wrong_password();
+
+	}
+}
+void Manager::menu_wrong_password()
 {
 	std::cout << "Do you want to: " << std::endl;
 	std::cout << "1. Try again." << std::endl;
@@ -26,19 +72,16 @@ void Manager::menu_wrong_password(std::string user_name)
 	int choice;
 	std::cin >> choice;
 	if (choice == 1)
-		if (m_user.log_in(user_name) == true)
-			run();
-		else
-			menu_wrong_password(user_name);
+		log_in();
 	else if (choice == 2)
 		handle_user();
 	else
 	{
 		std::cout << "Invalid input!" << std::endl;
-		menu_wrong_password(m_user.get_user_name());
+		menu_wrong_password();
 	}
 }
-void Manager::menu_user_not_found(std::string user_name)
+void Manager::menu_user_not_found()
 {
 	std::cout << "1. A new User." << std::endl;
 	std::cout << "2. An existing user who entered his user name wrong." << std::endl;
@@ -46,54 +89,90 @@ void Manager::menu_user_not_found(std::string user_name)
 	std::cin >> choice;
 	if (choice == 1)
 	{
-		m_user.sign_up(user_name);
-		run();
+		sign_up();
 	}
 	else if (choice == 2)
 		handle_user();
 	else
 	{
 		std::cout << "Invalid input!" << std::endl;
-		menu_user_not_found(user_name);
+		menu_user_not_found();
 	}
 
 }
 void Manager::handle_user()
 {
+	system("cls");
 	std::string user_name;
 	std::cout << "Hallo! Welcome to Gifter.\n";
 	std::cout << "Enter your user name: ";
 	std::cin >> user_name;
 	std::cout << std::endl;
+	m_user.m_user_name = user_name;
 
-
-	if (m_user.check_if_user_exists(user_name) == true)
-		if (m_user.log_in(user_name) == true)
-			run();
+	if (check_if_user_exists(user_name) == true)
+		log_in();
 	else
 	{
 		std::cout << "This user name was not found! Are you:" << std::endl;
-		menu_user_not_found(user_name);
+		menu_user_not_found();
 	}
 }
 void Manager::create_new_person()
 {
+	system("cls");
+	Person person;
 	std::string name;
 	std::cout << "What is the name of the lucky person ?\n";
 	std::cin >> name;
-	m_person.set_name(name);
-	m_person.select_gender();
-	m_person.select_age();
-
-	std::cout << m_person.to_string();
+	person.set_name(name);
+	person.select_gender();
+	person.select_age();
+	m_user.m_persons.push_back(person);
+	std::ofstream passwordFile(m_user.m_user_name + "/" + m_password + ".txt", std::ofstream::app);
+	passwordFile << name;
+	passwordFile.close();
+	std::ofstream new_person_stream(m_user.m_user_name +"/" + name + ".txt");
+	new_person_stream << person;
+	new_person_stream.close();
 
 	match_gifts();
 	recommend_gifts();
 	show_liked_gifts();
+	menu_beginning();
 }
-void Manager::see_previous_persons()
-{
 
+void Manager::menu_previous_persons()
+{
+	system("cls");
+
+	for (size_t i = 0; i < m_user.m_persons.size(); i++)
+	{
+		Person person = m_user.m_persons.at(i);
+		std::cout << i + 1 << ". " << person.to_string() << std::endl;
+	}
+
+	std::cout << "Enter index of person to select it or 0 to go back. " << std::endl;
+
+	size_t choice;
+	std::cin >> choice;
+	if (choice == 0)
+		menu_beginning();
+	else
+	{
+		if (choice > 0 && choice <= m_user.m_persons.size())
+		{
+			m_user.m_index_current_person = choice - 1;
+			match_gifts();
+			recommend_gifts();
+			show_liked_gifts();
+			menu_beginning();
+		}
+		else {
+			std::cout << "Invalid input!" << std::endl;
+			menu_previous_persons();
+		}
+	}
 }
 void Manager::menu_beginning()
 {
@@ -103,9 +182,12 @@ void Manager::menu_beginning()
 	int choice;
 	std::cin >> choice;
 	if (choice == 1)
+	{
+		m_user.m_index_current_person = m_user.m_index_current_person + 1;
 		create_new_person();
+	}
 	else if (choice == 2)
-		see_previous_persons();
+		menu_previous_persons();
 	else
 	{
 		std::cout << "Invalid input!" << std::endl;
@@ -119,27 +201,15 @@ void Manager::run()
 
 void Manager::match_gifts()
 {
+	m_potential_gifts.clear();
 	for (auto& gift_to_match : m_all_gifts)
 	{
-		if (m_person.filterGift(gift_to_match) == true)
+		if (m_user.m_persons.at(m_user.m_index_current_person).filterGift(gift_to_match) == true)
 			m_potential_gifts.push_back(gift_to_match);
 	}
 	std::random_shuffle(std::begin(m_potential_gifts), std::end(m_potential_gifts));
 }
 
-void Manager::select_potential_gifts()
-{
-	/*for (const auto& gift_to_insert : m_all_gifts)
-	{
-		if (gift_to_insert.get_match_score() > 0)
-		{
-			m_potential_gifts.push_back(gift_to_insert);
-
-		}
-	}*/
-	//std::sort(m_potential_gifts.begin(), m_potential_gifts.end(), comparator_match_score());
-
-}
 
 void Manager::recommend_gifts()
 {
@@ -147,13 +217,13 @@ void Manager::recommend_gifts()
 	for (std::size_t i = 0; i < m_potential_gifts.size(); i++)
 	{
 		Gift gift_to_review = m_potential_gifts.at(i);
-		std::cout << "What do you think about: \n \n";
+		std::cout << "( " << m_user.m_persons.at(m_user.m_index_current_person).get_name() << ") What do you think about: \n \n";
 		gift_to_review.print();
 		std::cout << "(Yes/Show) \n \n";
 		std::string user_input = "";
 		std::cin >> user_input;
 		if (user_input == "Yes" || user_input == "yes")
-			m_person.add_liked_gift(gift_to_review);
+			m_user.m_persons.at(m_user.m_index_current_person).add_liked_gift(gift_to_review);
 		else if (user_input == "Show" || user_input == "show")
 		{
 			show_liked_gifts();
@@ -179,10 +249,10 @@ void Manager::show_liked_gifts()
 {
 	system("cls");
 
-	if (m_person.get_liked_gifts().size() > 0)
+	if (m_user.m_persons.at(m_user.m_index_current_person).get_liked_gifts().size() > 0)
 	{
 		std::cout << "These are your liked gifts so far:" << std::endl;
-		for (auto& liked_gifts : m_person.get_liked_gifts())
+		for (auto& liked_gifts : m_user.m_persons.at(m_user.m_index_current_person).get_liked_gifts())
 			liked_gifts.print();
 	}
 	else

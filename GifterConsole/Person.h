@@ -4,11 +4,15 @@
 #include <string>
 #include "Gift.h"
 #include <vector>
+#include <fstream>
+
 class Person
 {
 public:
 	Person();
-	Person(std::string name);
+	Person(std::string name, std::string gender, std::string age);
+	friend std::ofstream & operator << (std::ofstream& ofs, Person person);
+	friend std::ifstream & operator >> (std::ifstream& ifs, Person & person);
 	void set_name(std::string name);
 	void set_gender(std::string gender);
 	void set_age(std::string age);
@@ -23,6 +27,8 @@ public:
 
 	void matchesGift(Gift &gift);
 
+	bool filterGift(Gift& gift);
+
 private:
 	std::string m_name;
 	std::string m_gender;
@@ -30,3 +36,4 @@ private:
 	std::vector<Gift> m_liked_gifts;
 
 };
+

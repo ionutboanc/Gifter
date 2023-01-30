@@ -3,9 +3,25 @@ Person::Person()
 {
 
 }
-Person::Person(std::string name)
+Person::Person(std::string name, std::string gender, std::string age)
 {
 	set_name(name);
+	m_gender = gender;
+	m_age = age;
+}
+std::ofstream& operator <<(std::ofstream& ofs, Person person)
+{
+	ofs << person.m_name << std::endl;
+	ofs << person.m_gender << std::endl;
+	ofs << person.m_age << std::endl;
+	for (auto& gift : person.m_liked_gifts)
+		ofs << gift.get_name();
+	return ofs;
+}
+std::ifstream& operator >>(std::ifstream& ifs, Person& person)
+{
+	ifs >> person.m_name >> person.m_gender >> person.m_age;
+	return ifs;
 }
 void Person::set_name(std::string name) {
 	m_name = name;
@@ -16,7 +32,7 @@ void Person::set_gender(std::string gender) {
 void Person::set_age(std::string age) {
 	m_age = age;
 }
-void Person::add_liked_gift(Gift &gift)
+void Person::add_liked_gift(Gift &gift) 
 {
 	m_liked_gifts.push_back(gift);
 }
@@ -108,7 +124,7 @@ std::string Person::to_string() {
 
 void Person::matchesGift(Gift& gift)
 {
-	if (get_gender() == "Male")
+	/*if (get_gender() == "Male")
 	{
 		if (gift.get_gender() == "Male" || gift.get_gender() == "Unisex")
 			gift.increase_match_score();
@@ -122,5 +138,18 @@ void Person::matchesGift(Gift& gift)
 		gift.increase_match_score();
 
 	if (gift.get_ages().count(get_age()))
-		gift.increase_match_score();
+		gift.increase_match_score();*/
+}
+
+bool Person::filterGift(Gift& gift)
+{
+	if (get_gender() == "Male" && gift.get_gender() == "Female")
+		return false;
+	else if (get_gender() == "Female" && gift.get_gender() == "Male")
+		return false;
+
+	if (!gift.get_ages().count(get_age()))
+		return false;
+
+	return true;
 }

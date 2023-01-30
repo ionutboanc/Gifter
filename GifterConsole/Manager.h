@@ -16,7 +16,9 @@
 #include "Plush.h"
 #include "User.h"
 #include <algorithm>
-
+#include <fstream>
+#include <direct.h>
+#include <sys/stat.h>
 
 //struct comparator_match_score {
 //	bool operator() (const Gift &gift_1, const Gift &gift_2) const {
@@ -29,21 +31,23 @@ class Manager
 public:
 	Manager();
 
-	//void handle_user();
+	bool check_if_user_exists(std::string& user_name);
+	void log_in();
+	void sign_up();
+	void handle_user();
 	void create_new_person();
-	void see_previous_persons();
+	void menu_previous_persons();
 	void menu_beginning();
-	//void menu_wrong_password(std::string user_name);
-	//void menu_user_not_found(std::string user_name);
+	void menu_wrong_password();
+	void menu_user_not_found();
 	void run();
 	void match_gifts();
-	void select_potential_gifts();
 	void recommend_gifts();
 	bool get_review_about_gift();
 	void show_liked_gifts();
 private:
-	
-	Person m_person;
+	struct User m_user;
+	std::string m_password;
 	std::vector<Gift> m_all_gifts;
 	std::vector<Gift> m_potential_gifts;
 
@@ -59,5 +63,5 @@ private:
 	Watch m_watch;
 	ShavingKit m_shaving_kit;
 	MakeUp m_make_up;
-	User m_user;
+
 };

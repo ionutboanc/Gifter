@@ -3,7 +3,10 @@
 Gift::Gift()
 {
 }
-
+Gift::Gift(std::string name)
+{
+	set_name(name);
+}
 Gift::Gift(std::string name, std::string gender, std::unordered_set<std::string> ages)
 {
 	set_name(name);
@@ -12,22 +15,6 @@ Gift::Gift(std::string name, std::string gender, std::unordered_set<std::string>
 		add_age(age);
 }
 
-
-
-void Gift::increase_match_score()
-{
-	m_match_score++;
-}
-
-void Gift::set_match_score(int match_score)
-{
-	m_match_score = match_score;
-}
-
-int Gift::get_match_score() const
-{
-	return m_match_score;
-}
 
 void Gift::set_name(std::string name)
 {
@@ -74,11 +61,10 @@ void Gift::print()
 	for (const auto& age : m_ages) {
 		std::cout << "\t" << age << std::endl;
 	}
-	std::cout << "Match score " << get_match_score() << std::endl;
 	std::cout << std::endl;
 }
 
 void Gift::printConst() const
 {
-	std::cout << "Name: " << get_nameConst() << " | " << get_match_score() << std::endl;
+	std::cout << "Name: " << get_nameConst() << std::endl;
 }
