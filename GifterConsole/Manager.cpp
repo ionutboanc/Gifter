@@ -17,7 +17,7 @@ Manager::Manager()
 
 	handle_user();
 }
-bool Manager::check_if_user_exists(std::string &user_name)
+bool Manager::check_if_user_exists(std::string& user_name)
 {
 	struct stat sb;
 	std::string adress = "./" + user_name;
@@ -50,11 +50,20 @@ void Manager::log_in()
 		std::string person_name;
 		while (std::getline(ifs, person_name)) {
 			Person person;
+			std::ifstream personGiftStream("./" + m_user.m_user_name + "/" + person_name + ".txt");
+
+			std::string person_gift_data;
+			while (std::getline(personGiftStream, person_gift_data))
+				for(auto& gift : m_all_gifts)
+					if(person_gift_data == gift.get_name())
+				person.add_liked_gift(gift);
 			std::ifstream personStream("./" + m_user.m_user_name + "/" + person_name + ".txt");
 			personStream >> person;
+			
+			
 			m_user.m_persons.push_back(person);
 		}
-
+		m_user.m_index_current_person = m_user.m_persons.size() - 1;
 		run();
 	}
 	else
@@ -109,12 +118,20 @@ void Manager::handle_user()
 	std::cin >> user_name;
 	std::cout << std::endl;
 	m_user.m_user_name = user_name;
+	try {
 
-	if (check_if_user_exists(user_name) == true)
-		log_in();
-	else
+		if (check_if_user_exists(user_name) == true)
+			log_in();
+		else
+		{
+			throw m_ue;
+			
+		}
+	}
+	catch (UserNotFoundException ue)
 	{
-		std::cout << "This user name was not found! Are you:" << std::endl;
+		std::cout<<ue.what()<<std::endl;
+		std::cout << "Are you:" << std::endl;
 		menu_user_not_found();
 	}
 }
@@ -130,15 +147,14 @@ void Manager::create_new_person()
 	person.select_age();
 	m_user.m_persons.push_back(person);
 	std::ofstream passwordFile(m_user.m_user_name + "/" + m_password + ".txt", std::ofstream::app);
-	passwordFile << name;
+	passwordFile << name << std::endl;
 	passwordFile.close();
-	std::ofstream new_person_stream(m_user.m_user_name +"/" + name + ".txt");
+	std::ofstream new_person_stream(m_user.m_user_name + "/" + name + ".txt");
 	new_person_stream << person;
 	new_person_stream.close();
 
 	match_gifts();
 	recommend_gifts();
-	show_liked_gifts();
 	menu_beginning();
 }
 
@@ -214,23 +230,44 @@ void Manager::match_gifts()
 void Manager::recommend_gifts()
 {
 	system("cls");
+	std::ofstream person_stream(m_user.m_user_name + "/" + m_user.m_persons.at(m_user.m_index_current_person).get_name() + ".txt", std::ofstream::app);
+	Person current_person = m_user.m_persons.at(m_user.m_index_current_person);
 	for (std::size_t i = 0; i < m_potential_gifts.size(); i++)
 	{
 		Gift gift_to_review = m_potential_gifts.at(i);
-		std::cout << "( " << m_user.m_persons.at(m_user.m_index_current_person).get_name() << ") What do you think about: \n \n";
-		gift_to_review.print();
-		std::cout << "(Yes/Show) \n \n";
-		std::string user_input = "";
-		std::cin >> user_input;
-		if (user_input == "Yes" || user_input == "yes")
-			m_user.m_persons.at(m_user.m_index_current_person).add_liked_gift(gift_to_review);
-		else if (user_input == "Show" || user_input == "show")
+		bool the_same = false;
+		std::ifstream personGiftStream("./" + m_user.m_user_name + "/" + current_person.get_name() + ".txt");
+
+		std::string person_gift_data;
+		while (std::getline(personGiftStream, person_gift_data))
+			if (person_gift_data == gift_to_review.get_name())
+			{
+				the_same = true;
+			}
+		if (the_same == false)
 		{
-			show_liked_gifts();
-			i--;
+			std::cout << "Do you think " << current_person.get_name() << " would like this: \n \n";
+			gift_to_review.print();
+			std::cout << "(Yes/Show) \n \n";
+			std::string user_input = "";
+			std::cin >> user_input;
+			if (user_input == "Yes" || user_input == "yes")
+			{
+				current_person.add_liked_gift(gift_to_review);
+				person_stream << gift_to_review.get_name() << std::endl;
+			}
+			else if (user_input == "Show" || user_input == "show")
+			{
+
+				show_liked_gifts();
+				i--;
+			}
+			personGiftStream.close();
+
+			system("cls");
 		}
-		system("cls");
 	}
+	person_stream.close();
 
 
 }
@@ -248,11 +285,12 @@ bool Manager::get_review_about_gift()
 void Manager::show_liked_gifts()
 {
 	system("cls");
-
-	if (m_user.m_persons.at(m_user.m_index_current_person).get_liked_gifts().size() > 0)
+	Person current_person = m_user.m_persons.at(m_user.m_index_current_person);
+	
+	if (current_person.get_liked_gifts().size() > 0)
 	{
 		std::cout << "These are your liked gifts so far:" << std::endl;
-		for (auto& liked_gifts : m_user.m_persons.at(m_user.m_index_current_person).get_liked_gifts())
+		for (auto& liked_gifts : current_person.get_liked_gifts())
 			liked_gifts.print();
 	}
 	else

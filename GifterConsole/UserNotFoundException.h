@@ -6,6 +6,6 @@ struct UserNotFoundException : public std::exception
 {
     const char* what() const throw ()
     {
-        return "User was not found!";
+        return "This user name was not found!";
     }
-}
+};

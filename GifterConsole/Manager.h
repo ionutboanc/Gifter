@@ -15,11 +15,11 @@
 #include "Sneakers.h"
 #include "Plush.h"
 #include "User.h"
+#include "UserNotFoundException.h"
 #include <algorithm>
 #include <fstream>
 #include <direct.h>
 #include <sys/stat.h>
-
 //struct comparator_match_score {
 //	bool operator() (const Gift &gift_1, const Gift &gift_2) const {
 //			return (gift_1.get_match_score() > gift_2.get_match_score());
@@ -47,6 +47,7 @@ public:
 	void show_liked_gifts();
 private:
 	struct User m_user;
+	struct UserNotFoundException m_ue;
 	std::string m_password;
 	std::vector<Gift> m_all_gifts;
 	std::vector<Gift> m_potential_gifts;
